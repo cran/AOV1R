@@ -1,0 +1,77 @@
+---
+title: "Using the generalized pivotal quantities"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using the generalized pivotal quantities}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = FALSE,
+  comment = "#>"
+)
+```
+
+The *generalized pivotal quantities* were introduced by Weerahandi. These are 
+random variables, which are simulated by the function `rGPQ`. 
+
+Statistical inference based on the generalized pivotal quantities is similar to 
+Bayesian posterior inference. For example, a generalized confidence interval of
+a parameter is obtained by taking the quantiles of the generalized pivotal
+quantity associated to this parameter. 
+
+## Generalized confidence interval
+
+Below is an example. We derive generalized confidence intervals for the three 
+parameters defining the ANOVA model as well as for the total variance.
+
+```{r confidenceIntervals}
+library(AOV1R)
+dat <- simAOV1R(I = 20, J = 5, mu = 10, sigmab = 1, sigmaw = 1)
+fit <- aov1r(y ~ group, data = dat)
+nsims <- 50000L
+gpq <- rGPQ(fit, nsims)
+gpq[["GPQ_sigma2tot"]] <- with(gpq, GPQ_sigma2b + GPQ_sigma2w)
+# Generalized confidence intervals:
+t(vapply(gpq, quantile, numeric(2L), probs = c(2.5, 97.5)/100))
+```
+
+
+## Generalized prediction interval
+
+Here we generate simulations of the generalized predictive distribution:
+
+```{r predictiveDistribution}
+ypred <- with(gpq, rnorm(nsims, GPQ_mu, sqrt(GPQ_sigma2tot)))
+```
+
+And then we get the generalized prediction interval by taking quantiles:
+
+```{r predictionInterval}
+quantile(ypred, probs = c(2.5, 97.5)/100)
+```
+
+
+## One-sided generalized tolerance intervals
+
+To get the bound of a one-sided generalized tolerance interval with tolerance 
+level $p$ and confidence level $1-\alpha$, generate the simulations of the
+generalized pivotal quantity associated to the $100p\%$-quantile of the
+distribution of the response, then take the $100\alpha\%$-quantile of these 
+simulations for the right-sided tolerance interval and the
+$100(1-\alpha)\%$-quantile for the left-sided tolerance interval:
+
+```{r}
+p <- 90/100
+alpha <- 2.5/100
+z <- qnorm(p)
+GPQ_lowerQuantile <- with(gpq, GPQ_mu - z*sqrt(GPQ_sigma2tot))
+GPQ_upperQuantile <- with(gpq, GPQ_mu + z*sqrt(GPQ_sigma2tot))
+c(
+  quantile(GPQ_lowerQuantile, probs = alpha),
+  quantile(GPQ_upperQuantile, probs = 1-alpha)
+)
+```
+

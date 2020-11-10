@@ -1,0 +1,103 @@
+---
+title: "Prediction interval for the AV1R model"
+author: "Stéphane Laurent"
+date: "8 novembre 2017"
+output: 
+  html_document: 
+    toc: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# The balanced case 
+
+Consider the balanced one-way random effect ANOVA model:
+$$
+Y_{ij} = \mu + A_i + G_{ij}, 
+\quad i=1, \ldots, I, \quad j=1, \ldots, J,
+$$
+where $A_i \sim \mathcal{N}(0, \sigma^2_b)$ and 
+$G_{ij} \sim \mathcal{N}(0, \sigma^2_w)$. 
+
+Denote by $Y^{\text{new}} \sim \mathcal{N}(\mu, \sigma^2_b + \sigma^2_w)$ a future observation. 
+
+One has 
+$$
+\overline{Y}_{\bullet\bullet} \sim \mathcal{N}\left(\mu, \frac{J\sigma^2_b+\sigma^2_w}{IJ}\right)
+$$
+hence
+$$
+\overline{Y}_{\bullet\bullet} - Y^{\text{new}} \sim 
+\mathcal{N}\left(0, \left(1+\frac{1}{I}\right)\sigma^2_b + \left(1+\frac{1}{IJ}\right)\sigma^2_w\right).
+$$
+
+Recall that $I(J-1)\sigma^2_w$ is estimated by 
+$SS_w \sim \sigma^2_w \chi^2_{I(J-1)}$ and $(I-1)(J\sigma^2_b+\sigma^2_w)$ is estimated by $SS_b \sim (J\sigma^2_b+\sigma^2_w)\chi^2_{I-1}$, 
+hence $\sigma^2_w$ is estimated by $\frac{1}{I(J-1)}SS_w$ and $\sigma^2_b$ is 
+estimated by 
+$$
+\frac{1}{J}\left(\frac{SS_b}{I-1} - \frac{SS_w}{I(J-1)}\right).
+$$
+Therefore, the variance of $\overline{Y}_{\bullet\bullet} - Y^{\text{new}}$ is estimated by $a SS_b + b SS_w$ where
+$$
+a = \frac{1}{J(I-1)}\left(1+\frac{1}{I}\right)
+$$
+and 
+$$
+b = \left(1+\frac{1}{IJ}\right)\frac{1}{I(J-1)} - \left(1+\frac{1}{I}\right)\frac{1}{JI(J-1)} = \frac{1}{IJ}.
+$$
+Using the Satterthwaite approximation, we find that 
+$$
+\frac{\overline{Y}_{\bullet\bullet} - Y^{\text{new}}}{\sqrt{a SS_b + b SS_w}} 
+\approx t_{\hat\nu}
+$$
+with 
+$$
+\hat\nu = \frac{{(a SS_b + b SS_w)}^2}{\dfrac{{(a SS_b)}^2}{I-1} + \dfrac{{(b SS_w)}^2}{I(J-1)}}.
+$$
+This yields an approximate prediction interval.
+
+
+# The unbalanced case 
+
+Now consider the general case 
+$$
+Y_{ij} = \mu + A_i + G_{ij}, 
+\quad i=1, \ldots, I, \quad j=1, \ldots, J_i.
+$$
+We define $N = \sum_{i=1}^I J_i$ and $\widetilde{J}$ as the harmonic mean of the $J_i$'s.
+
+One can check that $SS_w \sim \sigma^2_w \chi^2_{N-I}$ and setting 
+$\overline{\overline{Y}} = \frac{1}{I}\sum_{i=1}^I\overline{Y}_{i\bullet}$, 
+$$
+\overline{\overline{Y}} \sim \mathcal{N}\left(\mu, \frac{\widetilde{J}\sigma^2_b + \sigma^2_w}{I\widetilde{J}}\right).
+$$
+
+Now, set
+$$
+\widetilde{SS}_b = \widetilde{J}\sum_{i=1}^I(\overline{Y}_{i\bullet} - \overline{\overline{Y}}).
+$$
+
+It is known that 
+$$
+\widetilde{SS}_b \approx (\widetilde{J}\sigma^2_b + \sigma^2_w) \chi^2_{I-1},
+$$
+and that $\widetilde{SS}_b$ is independent of $SS_w$. 
+In addition, $SS_w$ is independent of $\overline{\overline{Y}}$, but $\overline{\overline{Y}}$ is not independent of $\widetilde{SS}_b$. 
+
+Ignoring this dependence and proceeding as in the balanced case, we find the Satterthwaite degrees of freedom
+$$
+\hat\nu = \frac{{(a \widetilde{SS}_b + b SS_w)}^2}{\dfrac{{(a \widetilde{SS}_b)}^2}{I-1} + \dfrac{{(b SS_w)}^2}{N-I}}
+$$
+with 
+$$
+a = \frac{1}{\widetilde{J}(I-1)}\left(1+\frac{1}{I}\right)
+$$
+and 
+$$
+b = \left(1+\frac{1}{I\widetilde{J}}\right)\frac{1}{N-I} - \left(1+\frac{1}{I}\right)\frac{1}{\widetilde{J}(N-I)} = \frac{\widetilde{J}-1}{\widetilde{J}(N-I)}.
+$$

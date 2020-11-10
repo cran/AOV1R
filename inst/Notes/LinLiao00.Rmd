@@ -1,0 +1,94 @@
+---
+title: "Prediction interval for the AV1R model"
+author: "Stéphane Laurent"
+date: "8 novembre 2017"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Consider the balanced one-way random effect ANOVA model:
+$$
+Y_{ij} = \mu + A_i + G_{ij}, 
+\quad i=1, \ldots, I, \quad j=1, \ldots, J,
+$$
+where $A_i \sim \mathcal{N}(0, \sigma^2_b)$ and 
+$G_{ij} \sim \mathcal{N}(0, \sigma^2_w)$. 
+
+Denote by $Y^{\text{new}} \sim \mathcal{N}(\mu, \sigma^2_b + \sigma^2_w)$ a future observation. 
+
+One has 
+$$
+\bar{Y}_{\bullet\bullet} \sim \mathcal{N}\left(\mu, \frac{J\sigma^2_b+\sigma^2_w}{IJ}\right)
+$$
+hence
+$$
+\bar{Y}_{\bullet\bullet} - Y^{\text{new}} \sim 
+\mathcal{N}\left(0, \left(1+\frac{1}{I}\right)\sigma^2_b + \left(1+\frac{1}{IJ}\right)\sigma^2_w\right).
+$$
+
+Recall that $I(J-1)\sigma^2_w$ is estimated by 
+$SS_w \sim \sigma^2_w \chi^2_{I(J-1)}$ and $(I-1)(J\sigma^2_b+\sigma^2_w)$ is estimated by $SS_b \sim (J\sigma^2_b+\sigma^2_w)\chi^2_{I-1}$, 
+hence $\sigma^2_w$ is estimated by $\frac{1}{I(J-1)}SS_w$ and $\sigma^2_b$ is 
+estimated by 
+$$
+\frac{1}{J}\left(\frac{SS_b}{I-1} - \frac{SS_w}{I(J-1)}\right).
+$$
+Therefore, the variance of $\bar{Y}_{\bullet\bullet} - Y^{\text{new}}$ is estimated by $a SS_b + b SS_w$ where
+$$
+a = \frac{1}{J(I-1)}\left(1+\frac{1}{I}\right)
+$$
+and 
+$$
+b = \left(1+\frac{1}{IJ}\right)\frac{1}{I(J-1)} - \left(1+\frac{1}{I}\right)\frac{1}{JI(J-1)} = \frac{1}{IJ}.
+$$
+Using the Satterthwaite approximation, we find that 
+$$
+\frac{\bar{Y}_{\bullet\bullet} - Y^{\text{new}}}{\sqrt{a SS_b + b SS_w}} 
+\approx t_{\hat\nu}
+$$
+with 
+$$
+\hat\nu = \frac{{(a SS_b + b SS_w)}^2}{\dfrac{{(a SS_b)}^2}{I-1} + \dfrac{{(b SS_w)}^2}{I(J-1)}}.
+$$
+This yields an approximate prediction interval.
+
+```{r}
+knitr::knit_exit()
+```
+
+```{r}
+library(AOV1R)
+I = 1000; J = 10
+dat <- simAV1R(I, J, mu=0, sigmab=2, sigmaw=3)
+av1r <- aov(y ~ Error(group), data=dat)
+sav1r <- summary(av1r)
+```
+
+```{r}
+ssb <- sav1r$`Error: group`[[1]]$`Sum Sq`
+ssw <- sav1r$`Error: Within`[[1]]$`Sum Sq`
+1/J * (ssb/(I-1) - ssw/I/(J-1))
+```
+
+```{r}
+library(VCA)
+anovaMM(y ~ (group), Data=dat)
+```
+
+```{r}
+I=5; J=3
+dat <- simAV1R(I, J, mu=0, sigmab=3, sigmaw=2)
+dat <- dat[-1,]
+fit <- aov1r(y ~ group, data=dat)
+fit$`Sums of squares`
+aov(y ~ Error(group), data=dat)
+anovaMM(y ~ (group), Data=dat)
+remlMM(y ~ (group), Data=dat)
+fit$`Variance components`
+```
+
